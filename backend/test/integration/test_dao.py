@@ -2,14 +2,16 @@ from more_itertools import side_effect
 from src.util.validators import getValidator
 from src.util.dao import DAO
 from src.controllers.usercontroller import UserController
-
+from pymongo.errors import WriteError
+from bson.objectid import ObjectId
+import json
 from unittest import mock
 import pytest
 
 @pytest.fixture
-def sut(request):
-    collection_name = request.param[0]
-    validator_name = request.param[1]
+def sut():
+    collection_name = 'test'
+    validator_name = 'user'
 
     # Mocked getValidator so that we can control what validator to use
     # regardless of the collection name
@@ -24,17 +26,35 @@ def sut(request):
 
         sut.drop()
 
-# Parameter order: collection_name, validator_name
-@pytest.mark.parametrize('sut', [('test', 'user')], indirect=True)
-def test_create(sut):
+@pytest.mark.parametrize('firstName, lastName, email, tasks, expectSuccess', [
+    ('a', 'b', 'c', [], True),
+    ('a', 'b', 'c', [ObjectId('000000000000000000000000')], True),
+    (None, 'b', 'c', [], False),
+    ('a', None, 'c', [], False),
+    ('a', 'b', None, [], False),
+    ('a', 'b', 'c', None, False),
+    (1, 'b', 'c', [], False),
+    ('a', 2, 'c', [], False),
+    ('a', 'b', 3, [], False),
+    ('a', 'b', 'c', ['bad id'], False),
+    ('a', 'b', 'c', [None], False),
+    ('a', 'b', 'c', 'not an array', False)
+])
+def test_create(firstName, lastName, email, tasks, expectSuccess, sut):
     model = {
-        'firstName': 'test',
-        'lastName': 'hallo',
-        'email': 'oke',
-        'tasks': []
+        'firstName': firstName,
+        'lastName': lastName,
+        'email': email,
+        'tasks': tasks
     }
 
-    result = sut.create(model)
-    print('Hello!')
-    print(result)
-    # assert result == model
+    if expectSuccess:
+        result = sut.create(model)
+        assert '_id' in result
+        assert 'firstName' in result
+        assert 'lastName' in result
+        assert 'email' in result
+        assert 'tasks' in result
+    else:
+        with pytest.raises(WriteError):
+            sut.create(model)
