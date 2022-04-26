@@ -30,7 +30,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/scriptcoded/projects/dbwebb-kurser/sysver/bth-sysver-assignment-2/backend/env"
+set -gx VIRTUAL_ENV "/home/scriptcoded/projects/dbwebb-kurser/sysver/bth-sysver-assignment-3/backend/env"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH
